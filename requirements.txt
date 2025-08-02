@@ -1,0 +1,6 @@
+requests
+beautifulsoup4
+pandas
+selenium[all]
+google_play_scraper
+openpyxl
