@@ -270,9 +270,7 @@ ids = {
 }
 
 
-driver = google_scraper.Main_driver(
-    chromedriver_path="./chromedriver.exe", headless=True
-)
+driver = google_scraper.Main_driver(headless=True)
 
 google_result = pd.DataFrame()
 google_updates_result = pd.DataFrame()

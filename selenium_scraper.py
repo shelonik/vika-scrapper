@@ -1,6 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -42,14 +41,13 @@ def parse_date(date_str):
 
 
 class Main_driver:
-    def __init__(self, chromedriver_path, headless=True):
+    def __init__(self, headless: bool = True):
         self.chrome_options = Options()
         if headless:
             self.chrome_options.add_argument("--headless")
-        self.service = Service(chromedriver_path)
-        self.driver = webdriver.Chrome(
-            service=self.service, options=self.chrome_options
-        )
+
+        # Selenium Manager will locate/download the correct ChromeDriver automatically
+        self.driver = webdriver.Chrome(options=self.chrome_options)
 
     def get_data_by_id(self, name, app_id, tablet):
         self.driver.get(
