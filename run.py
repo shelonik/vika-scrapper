@@ -1,9 +1,12 @@
-import selenium_scraper as google_scraper
-import appstore_scraper as appstore_scraper
-import pandas as pd
-import datetime
+"""Entry point for scraping app statistics from Google Play and the App Store."""
 
-ids = {
+import datetime
+import pandas as pd
+
+import selenium_scraper as google_scraper
+import appstore_scraper
+
+APP_IDS = {
     "TBC UZ": {
         "google": "ge.space.app.uzbekistan",
         "google_tablet": True,
@@ -270,55 +273,63 @@ ids = {
 }
 
 
-driver = google_scraper.Main_driver(headless=True)
+def main() -> None:
+    """Collect statistics for all banks and export them to an Excel file."""
+    driver = google_scraper.Main_driver(headless=True)
 
-google_result = pd.DataFrame()
-google_updates_result = pd.DataFrame()
-appstore_result = pd.DataFrame()
-appstore_updates_result = pd.DataFrame()
-for bank in ids.keys():
-    print()
-    print("Bank: ", bank)
-    google_data, google_updates = driver.get_data_by_id(
-        name=bank, app_id=ids[bank]["google"], tablet=ids[bank]["google_tablet"]
+    google_result = pd.DataFrame()
+    google_updates_result = pd.DataFrame()
+    appstore_result = pd.DataFrame()
+    appstore_updates_result = pd.DataFrame()
+
+    for bank, ids in APP_IDS.items():
+        print()
+        print("Bank: ", bank)
+        google_data, google_updates = driver.get_data_by_id(
+            name=bank, app_id=ids["google"], tablet=ids["google_tablet"]
+        )
+        appstore_data, appstore_updates = appstore_scraper.get_app_data(
+            bank, ids["appstore"]
+        )
+        google_result = pd.concat([google_result, google_data])
+        google_updates_result = pd.concat([google_updates_result, google_updates])
+        appstore_result = pd.concat([appstore_result, appstore_data])
+        appstore_updates_result = pd.concat([appstore_updates_result, appstore_updates])
+
+    driver.driver_quit()
+
+    result = pd.concat([google_result, appstore_result])
+    result = result.pivot_table(
+        index=["bank", "device"], columns="rating", aggfunc=lambda x: x
     )
-    appstore_data, appstore_updates = appstore_scraper.get_app_data(
-        bank, ids[bank]["appstore"]
+    result = result.reset_index()
+    cols_to_move = result.columns[2:8]
+    remaining_cols = result.columns.difference(cols_to_move)
+    new_order = list(remaining_cols) + list(cols_to_move)
+    result = result[new_order[:-1]]
+    result.columns = [
+        "bank",
+        "device",
+        1,
+        2,
+        3,
+        4,
+        5,
+        "google_total_installs",
+        "apple_total_review_count",
+        1,
+        2,
+        3,
+        4,
+        5,
+    ]
+    updates_result = pd.concat([google_updates_result, appstore_updates_result])
+    result = result.merge(updates_result, how="left", on=["bank", "device"])
+
+    result.to_excel(
+        rf"./app_data {datetime.date.today().isoformat()}.xlsx", index=False
     )
-    google_result = pd.concat([google_result, google_data])
-    google_updates_result = pd.concat([google_updates_result, google_updates])
-    appstore_result = pd.concat([appstore_result, appstore_data])
-    appstore_updates_result = pd.concat([appstore_updates_result, appstore_updates])
 
 
-driver.driver_quit()
-
-result = pd.concat([google_result, appstore_result])
-result = result.pivot_table(
-    index=["bank", "device"], columns="rating", aggfunc=lambda x: x
-)
-result = result.reset_index()
-cols_to_move = result.columns[2:8]
-remaining_cols = result.columns.difference(cols_to_move)
-new_order = list(remaining_cols) + list(cols_to_move)
-result = result[new_order[:-1]]
-result.columns = [
-    "bank",
-    "device",
-    1,
-    2,
-    3,
-    4,
-    5,
-    "google_total_installs",
-    "apple_total_review_count",
-    1,
-    2,
-    3,
-    4,
-    5,
-]
-updates_result = pd.concat([google_updates_result, appstore_updates_result])
-result = result.merge(updates_result, how="left", on=["bank", "device"])
-
-result.to_excel(rf"./app_data {datetime.date.today().isoformat()}.xlsx", index=False)
+if __name__ == "__main__":
+    main()

@@ -5,33 +5,32 @@ import pandas as pd
 from datetime import datetime
 
 
+MONTHS = {
+    "jan": "01",
+    "feb": "02",
+    "mar": "03",
+    "apr": "04",
+    "may": "05",
+    "jun": "06",
+    "jul": "07",
+    "aug": "08",
+    "sep": "09",
+    "oct": "10",
+    "nov": "11",
+    "dec": "12",
+}
+
+
 def parse_date(date_str):
-    months = [
-        ("jan", "01"),
-        ("feb", "02"),
-        ("mar", "03"),
-        ("apr", "04"),
-        ("may", "05"),
-        ("jun", "06"),
-        ("jul", "07"),
-        ("aug", "08"),
-        ("sep", "09"),
-        ("oct", "10"),
-        ("nov", "11"),
-        ("dec", "12"),
-    ]
     parts = date_str.split()
     day = parts[0]
-    month = None
-    for m in months:
-        if m[0] in parts[1].lower():
-            month = m[1]
-            break
+    month_key = parts[1][:3].lower()
+    month = MONTHS.get(month_key)
     year = parts[2]
 
     if month:
-        date_str = f"{year}-{month}-{day.zfill(2)}"
-        return datetime.strptime(date_str, "%Y-%m-%d")
+        formatted = f"{year}-{month}-{day.zfill(2)}"
+        return datetime.strptime(formatted, "%Y-%m-%d")
     return None
 
 

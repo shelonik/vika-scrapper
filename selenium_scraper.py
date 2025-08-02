@@ -10,33 +10,32 @@ from google_play_scraper import app
 from datetime import datetime
 
 
+MONTHS = {
+    "янв": "01",
+    "февр": "02",
+    "мар": "03",
+    "апр": "04",
+    "ма": "05",
+    "июн": "06",
+    "июл": "07",
+    "авг": "08",
+    "сент": "09",
+    "окт": "10",
+    "ноя": "11",
+    "дек": "12",
+}
+
+
 def parse_date(date_str):
-    months = [
-        ("янв", "01"),
-        ("февр", "02"),
-        ("мар", "03"),
-        ("апр", "04"),
-        ("ма", "05"),
-        ("июн", "06"),
-        ("июл", "07"),
-        ("авг", "08"),
-        ("сент", "09"),
-        ("окт", "10"),
-        ("ноя", "11"),
-        ("дек", "12"),
-    ]
     parts = date_str.split()
     day = parts[0]
-    month = None
-    for m in months:
-        if m[0] in parts[1]:
-            month = m[1]
-            break
+    month_raw = parts[1]
+    month = next((num for prefix, num in MONTHS.items() if prefix in month_raw), None)
     year = parts[2].replace("г.", "").strip()
 
     if month:
-        date_str = f"{year}-{month}-{day.zfill(2)}"
-        return datetime.strptime(date_str, "%Y-%m-%d")
+        formatted = f"{year}-{month}-{day.zfill(2)}"
+        return datetime.strptime(formatted, "%Y-%m-%d")
     return None
 
 
