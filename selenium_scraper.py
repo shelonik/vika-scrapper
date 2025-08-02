@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-import time
 import pandas as pd
 from google_play_scraper import app
 from datetime import datetime
@@ -64,7 +63,9 @@ class Main_driver:
                 button.click()
                 print("Кнопка нажата!")
 
-                time.sleep(5)
+                WebDriverWait(self.driver, 10).until(
+                    lambda d: d.page_source != page_source_before
+                )
 
                 page_source_after = self.driver.page_source
                 soup_after = BeautifulSoup(page_source_after, "html.parser")
