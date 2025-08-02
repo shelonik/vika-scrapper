@@ -273,30 +273,40 @@ APP_IDS = {
 }
 
 
-def main() -> None:
-    """Collect statistics for all banks and export them to an Excel file."""
+def scrape_bank(bank, ids):
+    print()
+    print("Bank: ", bank)
     driver = google_scraper.Main_driver(headless=True)
-
-    google_result = pd.DataFrame()
-    google_updates_result = pd.DataFrame()
-    appstore_result = pd.DataFrame()
-    appstore_updates_result = pd.DataFrame()
-
-    for bank, ids in APP_IDS.items():
-        print()
-        print("Bank: ", bank)
+    try:
         google_data, google_updates = driver.get_data_by_id(
             name=bank, app_id=ids["google"], tablet=ids["google_tablet"]
         )
-        appstore_data, appstore_updates = appstore_scraper.get_app_data(
-            bank, ids["appstore"]
-        )
-        google_result = pd.concat([google_result, google_data])
-        google_updates_result = pd.concat([google_updates_result, google_updates])
-        appstore_result = pd.concat([appstore_result, appstore_data])
-        appstore_updates_result = pd.concat([appstore_updates_result, appstore_updates])
+    finally:
+        driver.driver_quit()
+    appstore_data, appstore_updates = appstore_scraper.get_app_data(
+        bank, ids["appstore"]
+    )
+    return google_data, google_updates, appstore_data, appstore_updates
 
-    driver.driver_quit()
+
+def main() -> None:
+    """Collect statistics for all banks and export them to an Excel file."""
+    google_results = []
+    google_updates_results = []
+    appstore_results = []
+    appstore_updates_results = []
+
+    for bank, ids in APP_IDS.items():
+        google_data, google_updates, appstore_data, appstore_updates = scrape_bank(bank, ids)
+        google_results.append(google_data)
+        google_updates_results.append(google_updates)
+        appstore_results.append(appstore_data)
+        appstore_updates_results.append(appstore_updates)
+
+    google_result = pd.concat(google_results, ignore_index=True)
+    google_updates_result = pd.concat(google_updates_results, ignore_index=True)
+    appstore_result = pd.concat(appstore_results, ignore_index=True)
+    appstore_updates_result = pd.concat(appstore_updates_results, ignore_index=True)
 
     result = pd.concat([google_result, appstore_result])
     result = result.pivot_table(
